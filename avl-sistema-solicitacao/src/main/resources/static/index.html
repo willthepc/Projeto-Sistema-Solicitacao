@@ -32,6 +32,10 @@
                             <input id="numero" type="number" class="form-control" required>
                         </div>
                         <div class="mb-3">
+                            <label for="solicitante" class="form-label">Solicitante</label>
+                            <input id="solicitante" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
                             <label for="descricao" class="form-label">Descrição</label>
                             <input id="descricao" class="form-control" required>
                         </div>
@@ -67,6 +71,7 @@
                     <thead>
                         <tr>
                             <th>Número</th>
+                            <th>Solicitante</th>
                             <th>Descrição</th>
                             <th class="text-end">Ações</th>
                         </tr>
@@ -130,6 +135,7 @@ async function atualizar() {
             ? lista.map(s => `
                 <tr>
                     <td><strong>${s.numero}</strong></td>
+                    <td>${s.solicitante}</td>
                     <td>${s.descricao}</td>
                     <td class="text-end">
                         <button class="btn btn-sm btn-outline-danger" onclick="remover(${s.numero})">
@@ -143,11 +149,11 @@ async function atualizar() {
     }
 }
 
-async function inserir(numero, descricao, silencioso = false) {
+async function inserir(numero, solicitante, descricao, silencioso = false) {
     const resposta = await fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ numero, descricao })
+        body: JSON.stringify({ numero, solicitante, descricao })
     });
 
     const dados = await lerJsonSeguro(resposta);
@@ -183,14 +189,15 @@ document.getElementById('formCadastro').addEventListener('submit', async (evento
 
     const numero = Number(document.getElementById('numero').value);
     const descricao = document.getElementById('descricao').value.trim();
+    const solicitante = document.getElementById('solicitante').value;
 
-    if (!numero || !descricao) {
-        mostrarToast('Atenção', 'Preencha o número e a descrição.');
+    if (!numero || !solicitante || !descricao) {
+        mostrarToast('Atenção', 'Preencha todos os campos.');
         return;
     }
 
     try {
-        await inserir(numero, descricao);
+        await inserir(numero, solicitante, descricao);
         evento.target.reset();
         document.getElementById('numero').focus();
         await atualizar();
@@ -216,9 +223,9 @@ document.getElementById('carregarExemplo').addEventListener('click', async () =>
 
     let inseridos = 0;
 
-    for (const [numero, descricao] of dados) {
+    for (const [numero, solicitante, descricao] of dados) {
         try {
-            await inserir(numero, descricao, true);
+            await inserir(numero, solicitante, descricao, true);
             inseridos++;
         } catch {
             // Registros já existentes são ignorados ao carregar o exemplo.
