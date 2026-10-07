@@ -70,5 +70,20 @@ public class SolicitacaoController {
         return ResponseEntity.status(HttpStatus.OK).body(slc);
     }
 
+    @PutMapping(value = "/{numero}")
+    public ResponseEntity<SolicitacaoRequest> modifyByID(@PathVariable int numero, @RequestBody SolicitacaoRequest request){
+
+        SolicitacaoRequest slc = new SolicitacaoRequest();
+
+        slc.setNumero(request.getNumero());
+        slc.setSolicitante(request.getSolicitante());
+        slc.setDescricao(request.getDescricao());
+
+        return ResponseEntity.ok().body(slc);
+
+    }
+
+
+
 
 }

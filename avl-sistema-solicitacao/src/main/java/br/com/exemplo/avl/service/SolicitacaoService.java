@@ -59,4 +59,13 @@ public class SolicitacaoService {
 
         return main;
     }
+
+    public Solicitacao update(int numero, SolicitacaoRequest request) {
+        Solicitacao solicitacao = repository.buscar(numero);
+
+        Solicitacao slc = Solicitacao.builder()
+                        .solicitante(solicitacao.setSolicitante(request.getSolicitante())
+                        .descricao(solicitacao.setDescricao(request.getDescricao()).
+                        .build();
+    }
 }
