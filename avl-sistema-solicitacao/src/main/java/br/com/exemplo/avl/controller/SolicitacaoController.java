@@ -71,16 +71,13 @@ public class SolicitacaoController {
     }
 
     @PutMapping(value = "/{numero}")
-    public ResponseEntity<SolicitacaoRequest> modifyByID(@PathVariable int numero, @RequestBody SolicitacaoRequest request){
-
-        SolicitacaoRequest slc = new SolicitacaoRequest();
-
-        slc.setNumero(request.getNumero());
-        slc.setSolicitante(request.getSolicitante());
-        slc.setDescricao(request.getDescricao());
-
-        return ResponseEntity.ok().body(slc);
-
+    public ResponseEntity<ApiResponse> update(@PathVariable int numero, @RequestBody SolicitacaoRequest request){
+        Solicitacao slc = service.update(numero, request);
+        if (slc != null) {
+            return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse(true, "Solicitação alterada com sucesso."));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(false, "Solicitação não encontrada."));
+        }
     }
 
 

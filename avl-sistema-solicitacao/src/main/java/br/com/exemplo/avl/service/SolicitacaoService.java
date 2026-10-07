@@ -61,11 +61,13 @@ public class SolicitacaoService {
     }
 
     public Solicitacao update(int numero, SolicitacaoRequest request) {
-        Solicitacao solicitacao = repository.buscar(numero);
+        Solicitacao dados = new Solicitacao();
 
-        Solicitacao slc = Solicitacao.builder()
-                        .solicitante(solicitacao.setSolicitante(request.getSolicitante())
-                        .descricao(solicitacao.setDescricao(request.getDescricao()).
-                        .build();
+        dados.setSolicitante(request.getSolicitante());
+        dados.setDescricao(request.getDescricao());
+
+        repository.alterarSolicitacao(numero, dados);
+
+        return repository.buscar(numero);
     }
 }

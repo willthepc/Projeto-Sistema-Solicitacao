@@ -15,4 +15,6 @@ public interface SolicitacaoRepository {
     List<Solicitacao> listar();
 
     String exibirArvore();
+
+    String alterarSolicitacao(int numero, Solicitacao solicitacao);
 }

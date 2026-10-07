@@ -140,11 +140,23 @@ public class ArvoreAVLRepository implements SolicitacaoRepository {
         if (n == null)
             return;
         sb.append(p).append(ultimo ? "└── " : "├── ").append(n.solicitacao.getNumero()).append(" [FB=").append(fb(n))
-                .append("] ").append(n.solicitacao.getDescricao()).append("\n");
+                .append("] ").append(n.solicitacao.getSolicitante()).append(" - ").append(n.solicitacao.getDescricao()).append("\n");
         String np = p + (ultimo ? "    " : "│   ");
         if (n.esquerda != null)
             exibir(n.esquerda, np, n.direita == null, sb);
         if (n.direita != null)
             exibir(n.direita, np, true, sb);
+    }
+
+    public String alterarSolicitacao(int numero, Solicitacao solicitacao) {
+        Solicitacao slc = buscar(numero);
+        if (slc == null) {
+            throw new RuntimeException("Solicitação não encontrada...");
+        }
+
+        slc.setSolicitante(solicitacao.getSolicitante());
+        slc.setDescricao(solicitacao.getDescricao());
+
+        return "Operação finalizada com sucesso!";
     }
 }

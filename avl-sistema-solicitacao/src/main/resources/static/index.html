@@ -84,6 +84,43 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditarLabel">Alterar Solicitação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditar" novalidate>
+                    <div class="mb-3">
+                        <label for="editNumero" class="form-label">Número</label>
+                        <input id="editNumero" type="number" class="form-control" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDateTimeOpen" class="form-label">Data de abertura</label>
+                        <input id="editDateTimeOpen" type="text" class="form-control" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editSolicitante" class="form-label">Solicitante</label>
+                        <input id="editSolicitante" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDescricao" class="form-label">Descrição</label>
+                        <input id="editDescricao" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarAlteracoes()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <!-- Toast substitui alert()/popup e não interrompe a interação do usuário. -->
 <div class="toast-container position-fixed top-0 end-0 p-3">
     <div id="toastNotificacao" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
@@ -141,12 +178,15 @@ async function atualizar() {
                     <td>${s.descricao}</td>
 
                     <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary" onclick="updateModal(${s.numero})">
+                            Atualizar
+                        </button>
                         <button class="btn btn-sm btn-outline-danger" onclick="remover(${s.numero})">
                             Remover
                         </button>
                     </td>
                 </tr>`).join('')
-            : '<tr><td colspan="3" class="text-center text-muted">Nenhuma solicitação cadastrada.</td></tr>';
+            : '<tr><td colspan="5" class="text-center text-muted">Nenhuma solicitação cadastrada.</td></tr>';
     } catch (erro) {
         mostrarToast('Erro', 'Não foi possível acessar a API. Verifique se o Spring Boot está executando.');
     }
@@ -187,6 +227,76 @@ async function remover(numero) {
     }
 }
 
+async function updateModal(numero) {
+    try {
+        const resposta = await fetch(API + '/' + numero);
+
+        if (resposta.status === 404) {
+            mostrarToast('Atenção', 'Solicitação não encontrada.');
+            await atualizar();
+            return;
+        }
+        if (!resposta.ok) {
+            throw new Error('Falha ao consultar a solicitação.');
+        }
+
+        const s = await resposta.json();
+        document.getElementById('editNumero').value = s.numero;
+        document.getElementById('editDateTimeOpen').value = s.dateTimeOpen;
+        document.getElementById('editSolicitante').value = s.solicitante;
+        document.getElementById('editDescricao').value = s.descricao;
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditar')).show();
+    } catch (erro) {
+        mostrarToast('Erro', 'Não foi possível comunicar com o servidor.');
+    }
+}
+
+async function salvarAlteracoes() {
+    const numero = Number(document.getElementById('editNumero').value);
+    const solicitante = document.getElementById('editSolicitante').value.trim();
+    const descricao = document.getElementById('editDescricao').value.trim();
+
+    if (!solicitante) {
+        mostrarToast('Atenção', 'Informe o nome do solicitante.');
+        return;
+    }
+    if (!descricao) {
+        mostrarToast('Atenção', 'Informe a descrição da solicitação.');
+        return;
+    }
+
+    await update(numero, { solicitante, descricao });
+}
+
+async function update(numero, solicitacao) {
+    try {
+        const resposta = await fetch(API + '/' + numero, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(solicitacao)
+        });
+        const dados = await lerJsonSeguro(resposta);
+
+        if (resposta.status === 404) {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditar')).hide();
+            mostrarToast('Atenção', dados.mensagem || 'Solicitação não encontrada.');
+            await atualizar();
+            return;
+        }
+        if (!resposta.ok) {
+            mostrarToast('Atenção', dados.mensagem || 'Não foi possível alterar a solicitação.');
+            return;
+        }
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditar')).hide();
+        mostrarToast('Alteração', dados.mensagem);
+        await atualizar();
+    } catch (erro) {
+        mostrarToast('Erro', 'Não foi possível comunicar com o servidor.');
+    }
+}
+
 document.getElementById('formCadastro').addEventListener('submit', async (evento) => {
     evento.preventDefault();
 
@@ -213,16 +323,17 @@ document.getElementById('formCadastro').addEventListener('submit', async (evento
 document.getElementById('atualizar').addEventListener('click', atualizar);
 
 document.getElementById('carregarExemplo').addEventListener('click', async () => {
+    const dateTimeOpen = null;
     const dados = [
-        [50, 'Problema no servidor'],
-        [30, 'Computador não inicia'],
-        [70, 'Falha de conexão'],
-        [20, 'Impressora não funciona'],
-        [40, 'Erro no sistema'],
-        [60, 'Problema de acesso'],
-        [80, 'Troca de equipamento'],
-        [10, 'Instalação de software'],
-        [25, 'Configuração de usuário']
+        [50, "Paulo Lima", 'Problema no servidor'],
+        [30, "Ana Souza", 'Computador não inicia'],
+        [70, "Carlos Mendes", 'Falha de conexão'],
+        [20, "Fernanda Costa", 'Impressora não funciona'],
+        [40, "Ricardo Alves", 'Erro no sistema'],
+        [60, "Juliana Rocha", 'Problema de acesso'],
+        [80, "Marcos Pereira", 'Troca de equipamento'],
+        [10, "Patrícia Gomes", 'Instalação de software'],
+        [25, "Lucas Ferreira", 'Configuração de usuário']
     ];
 
     let inseridos = 0;
